@@ -248,6 +248,7 @@
     <build>
         <finalName>mmall</finalName>
         <plugins>
+            <!--mybatis自动生成数据库表和pojo,mapper对应关系的插件-->
             <plugin>
                 <groupId>org.mybatis.generator</groupId>
                 <artifactId>mybatis-generator-maven-plugin</artifactId>
