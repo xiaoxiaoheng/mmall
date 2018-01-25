@@ -116,4 +116,66 @@
       update_time = now()
     where id = #{id,jdbcType=INTEGER}
   </update>
+
+  <update id="updateByUserIdAndProductId" parameterType="map">
+    update mmall_cart
+    SET checked = #{checked}
+    WHERE user_id = #{userId}
+    <if test="productId != null">
+      and product_id = #{productId}
+    </if>
+  </update>
+
+  <!--Cart selectByUserIdAndProductId(Integer userId, Integer productId);-->
+  <select id="selectByUserIdAndProductId" resultMap="BaseResultMap" parameterType="map">
+    SELECT
+    <include refid="Base_Column_List"/>
+    FROM mmall_cart
+    WHERE user_id = #{userId}
+    AND product_id = #{productId}
+  </select>
+
+
+  <!--void deleleteByUserIdAndProductIds(Integer userId, String[] productList);-->
+  <delete id="deleleteByUserIdAndProductIds" parameterType="map">
+    DELETE FROM
+    mmall_cart
+    where user_id = #{userId}
+    AND product_id IN
+    <foreach collection="productList" separator="," open="(" item="item" index="index" close=")">
+      #{item}
+    </foreach>
+  </delete>
+
+  <!--int selectProductCountByUser(Integer id);-->
+<!--  #第一种: 采用 IFNULL(expr1,expr2)函数,当expr1为NULL时,则数据返回默认值expre2
+
+  SELECT IFNULL(SUM(expr),0) &#45;&#45; 表示若 SUM()函数结果返回为NULL泽返回0-->
+  <select id="selectProductCountByUser" parameterType="int" resultType="int">
+    SELECT IFNULL(sum(quantity) , 0) as count FROM  mmall_cart where user_id = #{userId}
+  </select>
+
+  <!--List<Cart> selectByUserId(Integer userId);-->
+  <select id="selectByUserId" parameterType="int" resultMap="BaseResultMap">
+    SELECT
+    <include refid="Base_Column_List"/>
+    FROM mmall_cart
+    where user_id = #{userId}
+  </select>
+
+  <!--int selectUnChecked(@Param("userId") Integer userId , @Param("unChecked") Integer unChecked);-->
+  <select id="selectUnChecked" parameterType="map" resultType="int">
+    SELECT count(1)
+    FROM mmall_cart
+    where user_id = #{userId}
+    and checked = #{unChecked}
+  </select>
+
+  <select id="selectCheckedCartByUserId" parameterType="int" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from mmall_cart
+    where user_id = #{userId}
+    and checked = 1
+  </select>
 </mapper>

@@ -151,4 +151,73 @@
       update_time = now()
     where id = #{id,jdbcType=INTEGER}
   </update>
+
+  <!--int checkUsername(String username);-->
+  <select id="checkUsername" resultType="int" parameterType="string">
+    SELECT count(1)
+    FROM mmall_user
+    WHERE username = #{username}
+  </select>
+
+  <!--User selectLogin(String username, String password);-->
+  <select id="selectLogin" parameterType="map" resultMap="BaseResultMap">
+    SELECT
+    <include refid="Base_Column_List"></include>
+    FROM mmall_user
+    where username = #{username}
+    and password = #{password}
+  </select>
+
+  <!--int checkEmail(String email);-->
+  <select id="checkEmail" parameterType="string" resultType="int">
+    SELECT count(1)
+    FROM mmall_user
+    WHERE email = #{email}
+  </select>
+
+  <!--int checkEmailByUserId(String email, Integer id);-->
+  <select id="checkEmailByUserId" parameterType="map" resultType="int">
+    SELECT count(1)
+    FROM mmall_user
+    WHERE email = #{email}
+    and id != #{id}
+  </select>
+
+<!--  String selectQuestionByUsername(String username);-->
+  <select id="selectQuestionByUsername" parameterType="string" resultType="string">
+    SELECT question
+    FROM mmall_user
+    WHERE username = #{username}
+  </select>
+
+<!--  int checkAnswer(String username, String question, String answer);-->
+  <select id="checkAnswer" parameterType="map" resultType="int">
+    SELECT count(1)
+    FROM mmall_user
+    WHERE username = #{username}
+    and question = #{question}
+    and answer = #{answer}
+  </select>
+
+  <!--int updatePasswordByUsername(@Param("username") String username, @Param("password") String password);-->
+  <update id="updatePasswordByUsername" parameterType="map">
+    UPDATE mmall_user
+    set password = #{password}
+    WHERE username = #{username}
+  </update>
+
+  <!--int checkPassword(Integer id, String password);-->
+  <select id="checkPassword" parameterType="map" resultType="int">
+    SELECT count(1)
+    FROM mmall_user
+    WHERE id = #{id}
+    and password = #{password}
+  </select>
+
+  <!--ServerResponse selectRoleById(Integer id);-->
+  <select id="selectRoleById" parameterType="int" resultType="int">
+    SELECT role
+    FROM mmall_user
+    WHERE id = #{id}
+  </select>
 </mapper>
