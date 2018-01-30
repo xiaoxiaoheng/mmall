@@ -11,7 +11,7 @@ public interface IUserService {
 
     ServerResponse checkValid(String str, String type);
 
-    ServerResponse updateInformation(User user);
+    ServerResponse<User> updateInformation(User user);
 
     ServerResponse getInformation(Integer id);
 

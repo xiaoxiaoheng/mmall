@@ -81,28 +81,41 @@ public class UserController {
     // 登陆状态下更新个人信息,首先检查用户是否登陆，然后检查email是否存在，最后进行更新。
     @RequestMapping(value = "update_information.do" , method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse updateInformation(User user , HttpSession session) {
-        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
-        if(currentUser == null) {
+    public ServerResponse<User> updateInformation(User user , HttpServletRequest httpServletRequest) {
+        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+        if(StringUtils.isEmpty(loginToken)) {
             return ServerResponse.createByErrorMessage("用户未登陆");
         }
+        String userJsonStr = RedisPoolUtil.get(loginToken);
+        User currentUser = JsonUtil.string2Obj(userJsonStr , User.class);
+        if( currentUser == null) {
+            return ServerResponse.createByErrorMessage("用户未登陆");
+        }
+
         user.setId(currentUser.getId());
         user.setUsername(currentUser.getUsername());
-        ServerResponse response = iUserService.updateInformation(user);
+        ServerResponse<User> response = iUserService.updateInformation(user);
         if(response.isSuccess()) {
-            session.setAttribute(Const.CURRENT_USER , response.getData());
+            response.getData().setUsername(currentUser.getUsername());
+            RedisPoolUtil.setEx(loginToken , JsonUtil.obj2String(response.getData()) , Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
         }
         return response;
     }
 
     @RequestMapping(value = "get_information.do" , method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse getInformation(HttpSession session) {
-        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
-        if(currentUser == null) {
+    public ServerResponse getInformation(HttpServletRequest httpServletRequest) {
+        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+        if(StringUtils.isEmpty(loginToken)) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , ResponseCode.NEED_LOGIN.getDesc());
         }
-        return iUserService.getInformation(currentUser.getId());
+        String userJsonStr = RedisPoolUtil.get(loginToken);
+        User user = JsonUtil.string2Obj(userJsonStr , User.class);
+        if(user == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , ResponseCode.NEED_LOGIN.getDesc());
+        }
+
+        return iUserService.getInformation(user.getId());
     }
 
     @RequestMapping(value = "forget_get_question.do" , method = RequestMethod.POST)
@@ -125,11 +138,17 @@ public class UserController {
 
     @RequestMapping(value = "reset_password.do" , method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse<String> resetPassword(String passwordOld , String passwordNew , HttpSession session) {
-        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
-        if(currentUser == null) {
+    public ServerResponse<String> resetPassword(String passwordOld , String passwordNew , HttpServletRequest httpServletRequest) {
+        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+        if(StringUtils.isEmpty(loginToken)) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , ResponseCode.NEED_LOGIN.getDesc());
         }
-        return iUserService.resetPassword(currentUser , passwordOld , passwordNew);
+        String userJsonStr = RedisPoolUtil.get(loginToken);
+        User user = JsonUtil.string2Obj(userJsonStr , User.class);
+        if(user == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , ResponseCode.NEED_LOGIN.getDesc());
+        }
+
+        return iUserService.resetPassword(user , passwordOld , passwordNew);
     }
 }

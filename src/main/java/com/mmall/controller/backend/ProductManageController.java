@@ -10,7 +10,10 @@ import com.mmall.pojo.User;
 import com.mmall.service.IFileService;
 import com.mmall.service.IProductService;
 import com.mmall.service.IUserService;
+import com.mmall.util.CookieUtil;
+import com.mmall.util.JsonUtil;
 import com.mmall.util.PropertiesUtil;
+import com.mmall.util.RedisPoolUtil;
 import com.mmall.vo.ProductDetailVo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,10 +46,15 @@ public class ProductManageController {
     @ResponseBody
     public ServerResponse<PageInfo> list(@RequestParam(value = "pageSize" , defaultValue = "10") Integer pageSize ,
                                          @RequestParam(value = "pageNum" , defaultValue = "1") Integer pageNum ,
-                                         HttpSession session) {
-        User user = (User) session.getAttribute(Const.CURRENT_USER);
+                                         HttpServletRequest httpServletRequest) {
+        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+        if(loginToken == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , ResponseCode.NEED_LOGIN.getDesc());
+        }
+        String userJsonStr = RedisPoolUtil.get(loginToken);
+        User user = JsonUtil.string2Obj(userJsonStr , User.class);
         if(user == null) {
-            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , ResponseCode.NEED_LOGIN.getDesc());
         }
         if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
@@ -60,11 +68,15 @@ public class ProductManageController {
                                @RequestParam(value = "pageNum" , defaultValue = "1") Integer pageNum ,
                                  String productName ,
                                  Integer productId ,
-                                 HttpSession session) {
-        User user = (User) session.getAttribute(Const.CURRENT_USER);
+                                 HttpServletRequest httpServletRequest) {
+        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+        if(loginToken == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");        }
+        String userJsonStr = RedisPoolUtil.get(loginToken);
+        User user = JsonUtil.string2Obj(userJsonStr , User.class);
         if(user == null) {
-            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
-        }
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");        }
+
         if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
         }
@@ -74,12 +86,16 @@ public class ProductManageController {
     @RequestMapping(value = "upload.do" , method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse upload(@RequestParam(value = "upload_file" , required = false) MultipartFile file ,
-                                 HttpSession session ,
+                                 HttpServletRequest httpServletRequest ,
                                  HttpServletRequest request) {
-        User user = (User) session.getAttribute(Const.CURRENT_USER);
+        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+        if(loginToken == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");        }
+        String userJsonStr = RedisPoolUtil.get(loginToken);
+        User user = JsonUtil.string2Obj(userJsonStr , User.class);
         if(user == null) {
-            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
-        }
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");        }
+
         if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
         }
@@ -97,12 +113,20 @@ public class ProductManageController {
     @RequestMapping(value = "richtext_img_upload.do" , method = RequestMethod.POST)
     @ResponseBody
     public Map<String , Object> richtextImgUpload(@RequestParam(value = "upload_file" , required = false) MultipartFile file ,
-                                                  HttpSession session ,
+                                                  HttpServletRequest httpServletRequest ,
                                                   HttpServletRequest request ,
                                                   HttpServletResponse response) {
         Map resultMap = Maps.newHashMap();
-        User user = (User) session.getAttribute(Const.CURRENT_USER);
-        if (user == null) {
+        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+        if(loginToken == null) {
+            resultMap.put("success", false);
+            resultMap.put("msg", "请登录管理员");
+            return resultMap;
+        }
+
+        String userJsonStr = RedisPoolUtil.get(loginToken);
+        User user = JsonUtil.string2Obj(userJsonStr , User.class);
+        if(user == null) {
             resultMap.put("success", false);
             resultMap.put("msg", "请登录管理员");
             return resultMap;
@@ -136,11 +160,17 @@ public class ProductManageController {
 
     @RequestMapping(value = "detail.do" , method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse<ProductDetailVo> detail(HttpSession session , Integer productId) {
-        User user = (User) session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<ProductDetailVo> detail(HttpServletRequest httpServletRequest , Integer productId) {
+        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+        if(loginToken == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
+        }
+        String userJsonStr = RedisPoolUtil.get(loginToken);
+        User user = JsonUtil.string2Obj(userJsonStr , User.class);
         if(user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
         }
+
         if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
         }
@@ -150,11 +180,17 @@ public class ProductManageController {
 
     @RequestMapping(value = "set_sale_status.do" , method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse<String> setSaleStatus(HttpSession session , Integer productId , Integer status) {
-        User user = (User) session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<String> setSaleStatus(HttpServletRequest httpServletRequest , Integer productId , Integer status) {
+        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+        if(loginToken == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
+        }
+        String userJsonStr = RedisPoolUtil.get(loginToken);
+        User user = JsonUtil.string2Obj(userJsonStr , User.class);
         if(user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
         }
+
         if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
         }
@@ -165,11 +201,17 @@ public class ProductManageController {
     // TODO: 2018/1/13 暂时开放get接口，方便测试 
     @RequestMapping(value = "save.do" , method = RequestMethod.GET)
     @ResponseBody
-    public ServerResponse<String> save(HttpSession session , Product product) {
-        User user = (User) session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<String> save(HttpServletRequest httpServletRequest , Product product) {
+        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+        if(loginToken == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
+        }
+        String userJsonStr = RedisPoolUtil.get(loginToken);
+        User user = JsonUtil.string2Obj(userJsonStr , User.class);
         if(user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
         }
+
         if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
         }
