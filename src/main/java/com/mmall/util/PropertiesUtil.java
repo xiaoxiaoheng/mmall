@@ -38,4 +38,16 @@ public class PropertiesUtil {
         }
         return value.trim();
     }
+
+    public static Long getLong(String key , String defaultValue) {
+        return Long.parseLong(getProperty(key , defaultValue));
+    }
+
+    public static Integer getInteger(String key , String defaultValue) {
+        return Integer.parseInt(getProperty(key , defaultValue));
+    }
+
+    public static Boolean getBoolean(String key , String defaultValue) {
+        return Boolean.parseBoolean(getProperty(key , defaultValue));
+    }
 }

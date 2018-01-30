@@ -48,7 +48,7 @@ public class ProductManageController {
         if(user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
         }
-        if(iUserService.checkAdminRole(user.getId()) != Const.Role.ROLE_ADMIN) {
+        if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
         }
         return iProductService.list(pageNum , pageSize);
@@ -65,7 +65,7 @@ public class ProductManageController {
         if(user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
         }
-        if(iUserService.checkAdminRole(user.getId()) != Const.Role.ROLE_ADMIN) {
+        if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
         }
         return iProductService.search(pageNum , pageSize , productId , productName);
@@ -80,7 +80,7 @@ public class ProductManageController {
         if(user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
         }
-        if(iUserService.checkAdminRole(user.getId()) != Const.Role.ROLE_ADMIN) {
+        if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
         }
         // 临时上传文件目录
@@ -113,7 +113,7 @@ public class ProductManageController {
 //                "msg": "error message", # optional
 //            "file_path": "[real file path]"
 //        }
-        if (iUserService.checkAdminRole(user.getId()) == Const.Role.ROLE_ADMIN) {
+        if (!iUserService.checkAdminRole(user).isSuccess()) {
             String path = request.getSession().getServletContext().getRealPath("upload");
             String targetFileName = iFileService.upload(file, path);
             if (StringUtils.isBlank(targetFileName)) {
@@ -141,7 +141,7 @@ public class ProductManageController {
         if(user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
         }
-        if(iUserService.checkAdminRole(user.getId()) != Const.Role.ROLE_ADMIN) {
+        if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
         }
         ServerResponse<ProductDetailVo> response = iProductService.manageDetail(productId);
@@ -155,7 +155,7 @@ public class ProductManageController {
         if(user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
         }
-        if(iUserService.checkAdminRole(user.getId()) != Const.Role.ROLE_ADMIN) {
+        if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
         }
         ServerResponse<String> response = iProductService.updateSaleStatus(productId , status);
@@ -170,7 +170,7 @@ public class ProductManageController {
         if(user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode() , "用户未登陆，请登陆");
         }
-        if(iUserService.checkAdminRole(user.getId()) != Const.Role.ROLE_ADMIN) {
+        if(!iUserService.checkAdminRole(user).isSuccess()) {
             return ServerResponse.createByErrorMessage("无权限操作，需要管理员权限");
         }
         ServerResponse<String> response = iProductService.updateOrSave(product);
