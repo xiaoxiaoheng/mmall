@@ -29,6 +29,10 @@ public class UserController {
     @RequestMapping(value = "login.do" , method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse login(String username , String password , HttpSession session , HttpServletResponse httpServletResponse) {
+        // 测试全局异常
+/*        int i = 0;
+        int j = 10 / i;*/
+
         ServerResponse response = iUserService.selectLogin(username , password);
         if(response.isSuccess()) {
             // 登陆成功
